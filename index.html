@@ -1,510 +1,780 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>충무공 이순신 — 불멸의 바다</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;900&family=Noto+Sans+KR:wght@300;400;500&display=swap" rel="stylesheet">
-<script>
-tailwind.config = {
-  theme: {
-    extend: {
-      colors: {
-        ink:    '#0C0E14',
-        deep:   '#111520',
-        navy:   '#161C2E',
-        gold:   '#C9A84C',
-        'gold-light': '#E4C97A',
-        teal:   '#4EADA0',
-        'teal-dim': '#2E7A72',
-        paper:  '#F2EDE3',
-        mist:   '#B0BBCC',
-        dim:    '#4A5060',
-      },
-      fontFamily: {
-        serif: ['"Noto Serif KR"', 'serif'],
-        sans:  ['"Noto Sans KR"', 'sans-serif'],
-      },
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>한컴타자연습 - 산성비 게임</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts - 눈누 한글 폰트 & 프리텐다드 유사체 적용 -->
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+  <style>
+    body {
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
     }
-  }
-}
-</script>
-<style>
-  html { scroll-behavior: smooth; }
-  body { background: #0C0E14; font-family: 'Noto Sans KR', sans-serif; color: #F2EDE3; overflow-x: hidden; }
-  ::selection { background: #C9A84C33; color: #F2EDE3; }
-
-  .reveal { opacity: 0; transform: translateY(32px); transition: opacity 0.8s ease, transform 0.8s ease; }
-  .reveal.visible { opacity: 1; transform: translateY(0); }
-  .reveal-delay-1 { transition-delay: 0.1s; }
-  .reveal-delay-2 { transition-delay: 0.2s; }
-  .reveal-delay-3 { transition-delay: 0.35s; }
-  .reveal-delay-4 { transition-delay: 0.5s; }
-
-  .wave-line {
-    position: relative;
-  }
-  .wave-line::after {
-    content: '';
-    position: absolute;
-    bottom: -4px;
-    left: 0;
-    width: 100%;
-    height: 2px;
-    background: linear-gradient(90deg, #C9A84C, #4EADA0, #C9A84C);
-    background-size: 200%;
-    animation: waveshift 4s linear infinite;
-  }
-  @keyframes waveshift {
-    0% { background-position: 0%; }
-    100% { background-position: 200%; }
-  }
-
-  .hero-bg {
-    background: radial-gradient(ellipse 80% 60% at 50% 100%, #1a2840 0%, #0C0E14 70%);
-  }
-
-  .stat-num {
-    font-family: 'Noto Serif KR', serif;
-    font-weight: 900;
-    line-height: 1;
-  }
-
-  .battle-line::before {
-    content: '';
-    position: absolute;
-    left: 15px;
-    top: 0;
-    bottom: 0;
-    width: 1px;
-    background: linear-gradient(to bottom, transparent, #C9A84C55, #4EADA055, transparent);
-  }
-
-  .quote-mark {
-    font-family: 'Noto Serif KR', serif;
-    font-size: 6rem;
-    line-height: 0.5;
-    color: #C9A84C22;
-    user-select: none;
-  }
-
-  .nav-dot { transition: all 0.3s; }
-  .nav-dot.active { background: #C9A84C; transform: scale(1.3); }
-
-  @media (prefers-reduced-motion: reduce) {
-    .reveal { opacity: 1; transform: none; transition: none; }
-    .wave-line::after { animation: none; }
-  }
-
-  ::-webkit-scrollbar { width: 4px; }
-  ::-webkit-scrollbar-track { background: #0C0E14; }
-  ::-webkit-scrollbar-thumb { background: #C9A84C55; border-radius: 2px; }
-</style>
+    /* 단어가 떨어지는 화면 스크롤 방지 및 게임용 스타일 */
+    .game-area {
+      position: relative;
+      overflow: hidden;
+      background: radial-gradient(circle at center, #1e1b4b 0%, #0f172a 100%);
+    }
+    /* 키보드 포커스 링 애니메이션 */
+    .pulse-glow {
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 0px rgba(99, 102, 241, 0.7); }
+      50% { box-shadow: 0 0 0 10px rgba(99, 102, 241, 0); }
+    }
+    /* 파티클 효과용 클래스 */
+    .particle {
+      position: absolute;
+      pointer-events: none;
+      border-radius: 50%;
+      animation: blowup 0.6s ease-out forwards;
+    }
+    @keyframes blowup {
+      0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+      100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+    }
+  </style>
 </head>
-<body>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col justify-between">
 
-<!-- NAV -->
-<nav class="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-8 py-4" style="background: linear-gradient(to bottom, rgba(12,14,20,0.95), transparent); backdrop-filter: blur(8px);">
-  <a href="#hero" class="font-serif text-gold font-semibold tracking-widest text-sm">충무공</a>
-  <div class="hidden md:flex items-center gap-8 text-xs text-mist tracking-widest">
-    <a href="#about" class="hover:text-gold transition-colors">생애</a>
-    <a href="#battles" class="hover:text-gold transition-colors">해전</a>
-    <a href="#stats" class="hover:text-gold transition-colors">전적</a>
-    <a href="#legacy" class="hover:text-gold transition-colors">유산</a>
-    <a href="#quote" class="hover:text-gold transition-colors">어록</a>
-  </div>
-  <div class="flex flex-col gap-1.5 cursor-pointer md:hidden" onclick="toggleMenu()">
-    <span class="w-5 h-px bg-paper block"></span>
-    <span class="w-3 h-px bg-paper block ml-auto"></span>
-  </div>
-</nav>
-
-<!-- MOBILE MENU -->
-<div id="mobile-menu" class="fixed inset-0 z-40 bg-ink hidden flex-col items-center justify-center gap-8">
-  <button onclick="toggleMenu()" class="absolute top-5 right-8 text-mist text-2xl">✕</button>
-  <a href="#about"   onclick="toggleMenu()" class="font-serif text-2xl text-paper hover:text-gold transition-colors">생애</a>
-  <a href="#battles" onclick="toggleMenu()" class="font-serif text-2xl text-paper hover:text-gold transition-colors">해전</a>
-  <a href="#stats"   onclick="toggleMenu()" class="font-serif text-2xl text-paper hover:text-gold transition-colors">전적</a>
-  <a href="#legacy"  onclick="toggleMenu()" class="font-serif text-2xl text-paper hover:text-gold transition-colors">유산</a>
-  <a href="#quote"   onclick="toggleMenu()" class="font-serif text-2xl text-paper hover:text-gold transition-colors">어록</a>
-</div>
-
-<!-- HERO -->
-<section id="hero" class="hero-bg min-h-screen flex flex-col items-center justify-center relative overflow-hidden px-6">
-
-  <!-- Ambient particles -->
-  <div class="absolute inset-0 pointer-events-none" id="particles"></div>
-
-  <!-- Wave SVG bottom -->
-  <div class="absolute bottom-0 left-0 right-0">
-    <svg viewBox="0 0 1440 120" preserveAspectRatio="none" class="w-full h-24 block">
-      <path d="M0,60 C240,100 480,20 720,60 C960,100 1200,20 1440,60 L1440,120 L0,120 Z" fill="#111520" opacity="0.7"/>
-      <path d="M0,80 C360,40 720,100 1080,60 C1260,40 1380,80 1440,70 L1440,120 L0,120 Z" fill="#0C0E14"/>
-    </svg>
-  </div>
-
-  <!-- Tortoise ship silhouette -->
-  <div class="absolute bottom-28 right-0 md:right-10 opacity-10 pointer-events-none select-none" style="transform: scaleX(-1);">
-    <svg width="320" height="160" viewBox="0 0 320 160" fill="none">
-      <ellipse cx="160" cy="100" rx="140" ry="42" fill="#4EADA0"/>
-      <rect x="60" y="58" width="200" height="44" rx="22" fill="#4EADA0"/>
-      <polygon points="200,58 260,20 270,58" fill="#C9A84C" opacity="0.6"/>
-      <polygon points="160,58 200,15 210,58" fill="#C9A84C" opacity="0.5"/>
-      <polygon points="120,58 155,22 165,58" fill="#C9A84C" opacity="0.4"/>
-      <polygon points="80,58 115,28 125,58" fill="#C9A84C" opacity="0.3"/>
-      <rect x="40" y="90" width="240" height="18" rx="9" fill="#2E7A72"/>
-      <ellipse cx="160" cy="108" rx="130" ry="18" fill="#1a4a44" opacity="0.5"/>
-      <rect x="150" y="20" width="8" height="38" fill="#C9A84C" opacity="0.8"/>
-    </svg>
-  </div>
-
-  <div class="relative z-10 text-center max-w-3xl">
-    <p class="text-teal text-xs tracking-[0.4em] uppercase mb-6 reveal">1545 — 1598</p>
-
-    <h1 class="font-serif font-black text-paper leading-tight mb-4 reveal reveal-delay-1" style="font-size: clamp(3rem, 8vw, 6.5rem); letter-spacing: -0.02em;">
-      이순신
-    </h1>
-    <p class="font-serif text-gold text-xl md:text-2xl mb-8 tracking-widest reveal reveal-delay-2">
-      李舜臣 · 충무공
-    </p>
-
-    <p class="text-mist text-base md:text-lg leading-relaxed max-w-xl mx-auto mb-12 reveal reveal-delay-3" style="font-weight: 300;">
-      임진왜란의 칠흑 같은 바다 위에서<br>
-      조선의 운명을 홀로 떠받친 불멸의 제독.<br>
-      23번의 해전, 23번의 승리.
-    </p>
-
-    <a href="#about" class="inline-flex items-center gap-2 border border-gold text-gold hover:bg-gold hover:text-ink transition-all duration-300 px-8 py-3 text-sm tracking-widest font-serif reveal reveal-delay-4">
-      그의 이야기로 ↓
-    </a>
-  </div>
-</section>
-
-<!-- ABOUT -->
-<section id="about" class="bg-deep py-28 px-6">
-  <div class="max-w-5xl mx-auto">
-    <div class="grid md:grid-cols-2 gap-16 items-center">
+  <!-- 상단 네비게이션 헤더 -->
+  <header class="border-b border-slate-800 bg-slate-950/80 backdrop-blur-md px-6 py-4 flex justify-between items-center z-10">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center font-bold text-white shadow-lg shadow-indigo-500/20">
+        한
+      </div>
       <div>
-        <p class="text-teal text-xs tracking-[0.3em] uppercase mb-4 reveal">Biography</p>
-        <h2 class="font-serif font-black text-4xl md:text-5xl text-paper leading-tight mb-6 reveal reveal-delay-1">
-          한 사람이<br><span class="wave-line text-gold-light">나라를 구했다</span>
-        </h2>
-        <p class="text-mist leading-8 text-sm mb-5 reveal reveal-delay-2" style="font-weight: 300;">
-          1545년 서울 건천동에서 태어난 이순신은 32세에 무과에 급제하며 늦게 군인의 길을 걸었다. 변방 수비대에서 소리 없이 실력을 갈고닦던 그는 1591년 전라좌도 수군절도사로 임명되며 역사의 전면에 등장했다.
-        </p>
-        <p class="text-mist leading-8 text-sm mb-5 reveal reveal-delay-3" style="font-weight: 300;">
-          1592년 임진왜란이 발발하자, 육지의 조선군이 연전연패하는 동안 이순신의 수군만이 유일한 승전보를 올렸다. 학익진, 거북선, 지형 활용 등 독창적 전략으로 단 한 번도 패배하지 않았다.
-        </p>
-        <p class="text-mist leading-8 text-sm reveal reveal-delay-4" style="font-weight: 300;">
-          모함으로 투옥되고 백의종군의 굴욕을 겪었으나, 원균의 칠천량 패배로 수군이 궤멸되자 다시 기용되어 단 13척으로 133척을 물리쳤다. 1598년 노량 해전에서 적의 총탄에 맞아 장렬히 전사했다.
-        </p>
-      </div>
-
-      <div class="space-y-5 reveal reveal-delay-2">
-        <div class="border border-dim rounded-none p-6 relative overflow-hidden" style="background: rgba(78,173,160,0.04);">
-          <div class="absolute top-0 left-0 w-1 h-full bg-teal"></div>
-          <p class="text-xs text-teal tracking-widest uppercase mb-2">출생 · 사망</p>
-          <p class="font-serif text-paper text-lg">1545년 4월 28일 — 1598년 12월 16일</p>
-          <p class="text-mist text-sm mt-1">향년 53세 · 노량 해전 전사</p>
-        </div>
-        <div class="border border-dim rounded-none p-6 relative overflow-hidden" style="background: rgba(201,168,76,0.04);">
-          <div class="absolute top-0 left-0 w-1 h-full bg-gold"></div>
-          <p class="text-xs text-gold tracking-widest uppercase mb-2">최고 직책</p>
-          <p class="font-serif text-paper text-lg">삼도수군통제사</p>
-          <p class="text-mist text-sm mt-1">조선 전 수군 총사령관</p>
-        </div>
-        <div class="border border-dim rounded-none p-6 relative overflow-hidden" style="background: rgba(201,168,76,0.04);">
-          <div class="absolute top-0 left-0 w-1 h-full bg-gold-light"></div>
-          <p class="text-xs text-gold-light tracking-widest uppercase mb-2">시호</p>
-          <p class="font-serif text-paper text-lg">충무공 忠武公</p>
-          <p class="text-mist text-sm mt-1">충성스럽고 무예가 뛰어난 공</p>
-        </div>
-        <div class="border border-dim rounded-none p-6 relative overflow-hidden" style="background: rgba(78,173,160,0.04);">
-          <div class="absolute top-0 left-0 w-1 h-full bg-teal-dim"></div>
-          <p class="text-xs text-teal tracking-widest uppercase mb-2">전적</p>
-          <p class="font-serif text-paper text-lg">23전 23승 — 무패</p>
-          <p class="text-mist text-sm mt-1">임진왜란 전 해전 전승</p>
-        </div>
+        <h1 class="text-xl font-bold tracking-tight bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">한컴타자연습: 산성비</h1>
+        <p class="text-xs text-slate-400">Google Sheets 실시간 연동 리더보드</p>
       </div>
     </div>
-  </div>
-</section>
-
-<!-- STATS -->
-<section id="stats" class="py-24 px-6" style="background: linear-gradient(to bottom, #111520, #0C0E14);">
-  <div class="max-w-4xl mx-auto">
-    <p class="text-center text-teal text-xs tracking-[0.3em] uppercase mb-12 reveal">Numbers</p>
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-px border border-dim" style="background: #2a2d3a;">
-      <div class="bg-deep p-8 text-center reveal">
-        <div class="stat-num text-5xl md:text-6xl text-gold mb-2" data-count="23">0</div>
-        <p class="text-teal text-xs tracking-widest uppercase mt-2">전승</p>
-        <p class="text-mist text-xs mt-1">23전 23승</p>
-      </div>
-      <div class="bg-deep p-8 text-center reveal reveal-delay-1">
-        <div class="stat-num text-5xl md:text-6xl text-gold mb-2" data-count="333">0</div>
-        <p class="text-teal text-xs tracking-widest uppercase mt-2">격침</p>
-        <p class="text-mist text-xs mt-1">적선 총 격침</p>
-      </div>
-      <div class="bg-deep p-8 text-center reveal reveal-delay-2">
-        <div class="stat-num text-5xl md:text-6xl text-gold mb-2" data-count="13">0</div>
-        <p class="text-teal text-xs tracking-widest uppercase mt-2">명량</p>
-        <p class="text-mist text-xs mt-1">보유 전선 수</p>
-      </div>
-      <div class="bg-deep p-8 text-center reveal reveal-delay-3">
-        <div class="stat-num text-5xl md:text-6xl text-gold mb-2" data-count="133">0</div>
-        <p class="text-teal text-xs tracking-widest uppercase mt-2">적군</p>
-        <p class="text-mist text-xs mt-1">명량 당시 적선</p>
-      </div>
+    
+    <div class="flex items-center gap-2">
+      <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+        <span class="w-1.5 h-1.5 mr-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+        구글 시트 연동됨
+      </span>
     </div>
-  </div>
-</section>
+  </header>
 
-<!-- BATTLES -->
-<section id="battles" class="bg-ink py-28 px-6">
-  <div class="max-w-3xl mx-auto">
-    <p class="text-teal text-xs tracking-[0.3em] uppercase mb-4 reveal">Timeline</p>
-    <h2 class="font-serif font-black text-4xl md:text-5xl text-paper mb-16 reveal reveal-delay-1">
-      불패의 항적
-    </h2>
-
-    <div class="relative battle-line pl-10">
-      <!-- 전투 아이템 -->
-      <div class="mb-10 relative reveal">
-        <div class="absolute -left-10 top-1 w-7 h-7 rounded-full border-2 border-gold bg-ink flex items-center justify-center">
-          <div class="w-2 h-2 rounded-full bg-gold"></div>
+  <!-- 메인 게임 보드 레이아웃 -->
+  <main class="flex-grow grid grid-cols-1 lg:grid-cols-4 gap-6 p-4 max-w-7xl mx-auto w-full">
+    
+    <!-- 왼쪽: 게임 플레이 스페이스 (3칸 차지) -->
+    <div class="lg:col-span-3 flex flex-col gap-4">
+      
+      <!-- 게임 상단 스탯 대시보드 -->
+      <div class="grid grid-cols-4 gap-3 bg-slate-950/60 border border-slate-800/80 p-4 rounded-2xl">
+        <div class="bg-slate-900/80 border border-slate-800 p-3 rounded-xl text-center">
+          <div class="text-xs text-slate-400 font-medium mb-1">SCORE</div>
+          <div id="scoreDisplay" class="text-2xl font-black text-emerald-400">0</div>
         </div>
-        <p class="text-gold text-xs tracking-widest mb-1">1592년 5월 · 1차 출동</p>
-        <h3 class="font-serif text-paper text-xl font-semibold mb-2">옥포 해전</h3>
-        <p class="text-mist text-sm leading-7" style="font-weight: 300;">첫 출전에서 일본 함선 26척 격침. 조선 수군 최초의 승리로 전세의 전환점을 만들었다.</p>
+        <div class="bg-slate-900/80 border border-slate-800 p-3 rounded-xl text-center">
+          <div class="text-xs text-slate-400 font-medium mb-1">LEVEL</div>
+          <div id="levelDisplay" class="text-2xl font-black text-indigo-400">1</div>
+        </div>
+        <div class="bg-slate-900/80 border border-slate-800 p-3 rounded-xl text-center">
+          <div class="text-xs text-slate-400 font-medium mb-1">WPM (타수)</div>
+          <div id="wpmDisplay" class="text-2xl font-black text-purple-400">0</div>
+        </div>
+        <div class="bg-slate-900/80 border border-slate-800 p-3 rounded-xl text-center flex flex-col justify-center items-center">
+          <div class="text-xs text-slate-400 font-medium mb-1">LIFE</div>
+          <div id="lifeDisplay" class="text-lg font-black text-rose-500 flex gap-0.5">❤️❤️❤️❤️❤️</div>
+        </div>
       </div>
 
-      <div class="mb-10 relative reveal reveal-delay-1">
-        <div class="absolute -left-10 top-1 w-7 h-7 rounded-full border-2 border-teal bg-ink flex items-center justify-center">
-          <div class="w-2 h-2 rounded-full bg-teal"></div>
+      <!-- 핵심 게임 화면 영역 -->
+      <div id="gameArea" class="game-area flex-grow min-h-[450px] rounded-2xl border border-slate-800 relative flex flex-col justify-center items-center">
+        <!-- 시작 대기 화면 -->
+        <div id="startScreen" class="absolute inset-0 bg-slate-950/90 flex flex-col justify-center items-center z-20 p-6 text-center">
+          <div class="w-16 h-16 bg-indigo-500/10 border border-indigo-500/30 rounded-2xl flex items-center justify-center text-indigo-400 mb-4 animate-bounce">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
+            </svg>
+          </div>
+          <h2 class="text-3xl font-black mb-2 tracking-tight">산성비 타이핑 게임</h2>
+          <p class="text-slate-400 max-w-md text-sm mb-6 leading-relaxed">
+            위에서 한꺼번에 떨어지는 한글 단어들이 바닥에 닿기 전에 입력하여 제거하세요! 한 번에 여러 단어가 떨어지므로 우선순위를 정해 타이핑해야 합니다.
+          </p>
+          <button onclick="startGame()" class="px-8 py-3.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold rounded-xl shadow-lg shadow-indigo-500/20 transform hover:-translate-y-0.5 active:translate-y-0 transition-all text-base">
+            게임 시작하기
+          </button>
         </div>
-        <p class="text-teal text-xs tracking-widest mb-1">1592년 7월 · 거북선 활약</p>
-        <h3 class="font-serif text-paper text-xl font-semibold mb-2">사천 해전</h3>
-        <p class="text-mist text-sm leading-7" style="font-weight: 300;">세계 최초의 철갑 전함 거북선을 처음 실전에 투입한 해전. 적선 13척을 전멸시켰다.</p>
+
+        <!-- 일시정지 화면 -->
+        <div id="pauseScreen" class="hidden absolute inset-0 bg-slate-950/80 flex flex-col justify-center items-center z-20">
+          <h2 class="text-3xl font-black mb-4">일시정지됨</h2>
+          <button onclick="togglePause()" class="px-6 py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-semibold rounded-lg transition-all">
+            계속하기 (ESC)
+          </button>
+        </div>
+
+        <!-- 게임 가이드/알림 자막 -->
+        <div id="gameNotice" class="absolute top-4 left-4 bg-slate-950/60 px-3 py-1.5 rounded-lg text-xs text-slate-300 border border-slate-800/40 pointer-events-none transition-opacity duration-300 opacity-0">
+          알림 메시지
+        </div>
       </div>
 
-      <div class="mb-10 relative reveal reveal-delay-2">
-        <div class="absolute -left-10 top-1 w-7 h-7 rounded-full border-2 border-gold-light bg-ink flex items-center justify-center">
-          <div class="w-2 h-2 rounded-full bg-gold-light"></div>
-        </div>
-        <p class="text-gold-light text-xs tracking-widest mb-1">1592년 8월 · 임진왜란 3대 대첩</p>
-        <h3 class="font-serif text-paper text-xl font-semibold mb-2">한산도 대첩</h3>
-        <p class="text-mist text-sm leading-7" style="font-weight: 300;">학익진(鶴翼陣) 전법으로 적선 73척 중 59척을 격침·나포. 일본 수군의 서해 진출을 영원히 차단했다.</p>
-      </div>
-
-      <div class="mb-10 relative reveal">
-        <div class="absolute -left-10 top-1 w-7 h-7 rounded-full border-2 border-teal bg-ink flex items-center justify-center">
-          <div class="w-2 h-2 rounded-full bg-teal"></div>
-        </div>
-        <p class="text-teal text-xs tracking-widest mb-1">1592년 9월</p>
-        <h3 class="font-serif text-paper text-xl font-semibold mb-2">부산포 해전</h3>
-        <p class="text-mist text-sm leading-7" style="font-weight: 300;">일본군 본거지 부산을 직접 공격. 470여 척의 적 함대에 맞서 100여 척을 격침하고 제해권을 완전히 장악했다.</p>
-      </div>
-
-      <div class="mb-10 relative reveal reveal-delay-1">
-        <div class="absolute -left-10 top-1 w-7 h-7 rounded-full border-2 border-gold bg-ink flex items-center justify-center">
-          <div class="w-2 h-2 rounded-full bg-gold"></div>
-        </div>
-        <p class="text-gold text-xs tracking-widest mb-1">1597년 9월 · 기적의 해전</p>
-        <h3 class="font-serif text-paper text-xl font-semibold mb-2">명량 대첩</h3>
-        <p class="text-mist text-sm leading-7" style="font-weight: 300;">칠천량 패전 후 단 13척으로 133척에 맞선 인류 해전사 최고의 역전 신화. 울돌목의 빠른 조류를 이용해 31척을 격파했다.</p>
-      </div>
-
-      <div class="relative reveal reveal-delay-2">
-        <div class="absolute -left-10 top-1 w-7 h-7 rounded-full border-2 border-mist bg-ink flex items-center justify-center">
-          <div class="w-2 h-2 rounded-full bg-mist"></div>
-        </div>
-        <p class="text-mist text-xs tracking-widest mb-1">1598년 12월 · 최후의 해전</p>
-        <h3 class="font-serif text-paper text-xl font-semibold mb-2">노량 해전</h3>
-        <p class="text-mist text-sm leading-7" style="font-weight: 300;">퇴각하는 일본 함대를 막아 200여 척을 격파하며 임진왜란을 끝냈다. 전투 중 적의 유탄에 맞아 전사. "나의 죽음을 적에게 알리지 마라."</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- TURTLE SHIP -->
-<section class="py-24 px-6" style="background: linear-gradient(to bottom, #0C0E14, #0e1520);">
-  <div class="max-w-5xl mx-auto">
-    <div class="grid md:grid-cols-2 gap-16 items-center">
-      <div class="order-2 md:order-1 reveal">
-        <div class="border border-teal-dim p-8 relative" style="background: rgba(78,173,160,0.04);">
-          <svg viewBox="0 0 400 200" class="w-full" fill="none">
-            <ellipse cx="200" cy="130" rx="175" ry="52" fill="#1a3a36" opacity="0.8"/>
-            <rect x="70" y="78" width="260" height="58" rx="28" fill="#2E7A72"/>
-            <rect x="80" y="80" width="240" height="54" rx="26" fill="#4EADA0" opacity="0.5"/>
-            <!-- spikes -->
-            <polygon points="110,78 118,48 126,78" fill="#C9A84C" opacity="0.9"/>
-            <polygon points="140,78 148,42 156,78" fill="#C9A84C" opacity="0.9"/>
-            <polygon points="170,78 178,38 186,78" fill="#C9A84C" opacity="0.9"/>
-            <polygon points="200,78 208,36 216,78" fill="#C9A84C"/>
-            <polygon points="230,78 238,38 246,78" fill="#C9A84C" opacity="0.9"/>
-            <polygon points="260,78 268,42 276,78" fill="#C9A84C" opacity="0.9"/>
-            <polygon points="285,78 293,52 301,78" fill="#C9A84C" opacity="0.8"/>
-            <!-- head -->
-            <ellipse cx="60" cy="115" rx="28" ry="18" fill="#2E7A72"/>
-            <circle cx="52" cy="110" r="4" fill="#0C0E14"/>
-            <circle cx="53" cy="109" r="1.5" fill="#4EADA0" opacity="0.6"/>
-            <!-- cannon holes -->
-            <rect x="95" y="100" width="10" height="6" rx="3" fill="#0a1a18"/>
-            <rect x="135" y="98" width="10" height="6" rx="3" fill="#0a1a18"/>
-            <rect x="175" y="97" width="10" height="6" rx="3" fill="#0a1a18"/>
-            <rect x="215" y="97" width="10" height="6" rx="3" fill="#0a1a18"/>
-            <rect x="255" y="98" width="10" height="6" rx="3" fill="#0a1a18"/>
-            <rect x="295" y="100" width="10" height="6" rx="3" fill="#0a1a18"/>
-            <!-- tail -->
-            <path d="M340 115 Q370 100 360 130 Q350 150 340 136" fill="#2E7A72"/>
-            <!-- water -->
-            <path d="M25,160 Q75,148 125,160 Q175,172 225,160 Q275,148 325,160 Q375,172 400,160" stroke="#4EADA0" stroke-width="1.5" opacity="0.3" fill="none"/>
-            <path d="M0,175 Q50,163 100,175 Q150,187 200,175 Q250,163 300,175 Q350,187 400,175" stroke="#4EADA0" stroke-width="1" opacity="0.2" fill="none"/>
+      <!-- 하단 입력 도구 상자 -->
+      <div class="bg-slate-950/60 border border-slate-800/80 p-4 rounded-2xl flex gap-3 items-center">
+        <input type="text" id="typingInput" disabled placeholder="게임 시작을 누르거나 단어를 타이핑하세요!" 
+               class="flex-grow bg-slate-900 border border-slate-800 hover:border-slate-700 focus:border-indigo-500 rounded-xl px-5 py-3.5 text-lg font-medium text-white placeholder-slate-500 focus:outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed" />
+        <button id="pauseBtn" onclick="togglePause()" disabled class="p-4 bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 hover:text-white rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed" title="일시정지 (ESC)">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          <p class="text-center text-teal text-xs tracking-widest mt-4 uppercase">거북선 · 龜船</p>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- 오른쪽: 실시간 랭킹 시스템 (1칸 차지) -->
+    <div class="bg-slate-950/60 border border-slate-800/80 p-5 rounded-2xl flex flex-col h-[600px] lg:h-auto">
+      <div class="flex items-center justify-between mb-4 border-b border-slate-800 pb-3">
+        <div class="flex items-center gap-2">
+          <span class="text-amber-500">🏆</span>
+          <h3 class="font-bold text-slate-200">명예의 전당 (Top 10)</h3>
+        </div>
+        <button onclick="fetchLeaderboard()" class="p-1.5 hover:bg-slate-900 rounded-lg text-slate-400 hover:text-white transition-all" title="새로고침">
+          <svg id="refreshIcon" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 8H18" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- 리더보드 리스트 부모 -->
+      <div class="flex-grow overflow-y-auto pr-1 space-y-2.5 custom-scrollbar" id="leaderboardContainer">
+        <!-- 로딩 상태 또는 결과 목록 채워짐 -->
+        <div class="text-center py-12 text-slate-500 text-xs animate-pulse">
+          실시간 순위표 동기화 중...
         </div>
       </div>
-      <div class="order-1 md:order-2 reveal reveal-delay-1">
-        <p class="text-teal text-xs tracking-[0.3em] uppercase mb-4">Innovation</p>
-        <h2 class="font-serif font-black text-3xl md:text-4xl text-paper leading-tight mb-6">
-          500년을 앞선<br><span class="text-teal">거북선</span>
-        </h2>
-        <p class="text-mist text-sm leading-8 mb-5" style="font-weight: 300;">
-          이순신이 직접 설계에 관여한 거북선(龜船)은 세계 최초의 철갑 전함으로 추정된다. 용머리 모양의 뱃머리에서 독연기를 내뿜고, 등판의 쇠못이 적의 접근을 막았다.
-        </p>
-        <p class="text-mist text-sm leading-8" style="font-weight: 300;">
-          사방에 설치된 72개의 함포로 전방위 공격이 가능했으며, 돌격선으로서 적진을 헤집는 역할을 맡았다. 1592년 사천 해전에서 처음 실전 투입되어 일본군에게 공포를 심었다.
-        </p>
+
+      <div class="mt-4 pt-3 border-t border-slate-800/60 text-center">
+        <span class="text-[10px] text-slate-500">등록 완료 시 구글 시트에 자동 기록됩니다.</span>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- 게임 오버 시 점수 전송 모달 -->
+  <div id="gameOverModal" class="hidden fixed inset-0 bg-slate-950/90 backdrop-blur-sm flex justify-center items-center z-50 p-4">
+    <div class="bg-slate-900 border border-indigo-500/30 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
+      <div class="text-center mb-6">
+        <span class="text-4xl">🎮</span>
+        <h3 class="text-2xl font-black mt-2 text-rose-500">GAME OVER</h3>
+        <p class="text-xs text-slate-400 mt-1">도전이 끝났습니다! 점수를 기록해보세요.</p>
+      </div>
+
+      <!-- 스탯 요약 -->
+      <div class="grid grid-cols-2 gap-3 mb-6 bg-slate-950/50 p-4 rounded-xl border border-slate-800">
+        <div class="text-center">
+          <span class="text-xs text-slate-400">최종 점수</span>
+          <p id="finalScore" class="text-2xl font-black text-emerald-400">0점</p>
+        </div>
+        <div class="text-center">
+          <span class="text-xs text-slate-400">평균 타수</span>
+          <p id="finalWpm" class="text-2xl font-black text-purple-400">0 WPM</p>
+        </div>
+      </div>
+
+      <!-- 전송 양식 -->
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 mb-1.5">도전자 이름 (최대 8자)</label>
+          <input type="text" id="playerNameInput" maxlength="8" placeholder="홍길동" 
+                 class="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-xl px-4 py-3 text-sm focus:outline-none text-slate-200 transition-all" />
+        </div>
+
+        <div id="submitError" class="hidden text-rose-400 text-xs text-center">
+          전송 중 오류가 발생했습니다. 다시 시도해 주세요.
+        </div>
+
+        <div class="flex gap-3 pt-2">
+          <button onclick="closeGameOverModal()" class="w-1/3 py-3 bg-slate-800 hover:bg-slate-700 font-semibold text-sm rounded-xl transition-all">
+            다시하기
+          </button>
+          <button id="submitScoreBtn" onclick="submitScore()" class="w-2/3 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-sm rounded-xl transition-all flex items-center justify-center gap-2">
+            <span>기록 등록하기</span>
+            <svg id="submitSpinner" class="hidden animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          </button>
+        </div>
       </div>
     </div>
   </div>
-</section>
 
-<!-- LEGACY -->
-<section id="legacy" class="bg-deep py-28 px-6">
-  <div class="max-w-5xl mx-auto">
-    <p class="text-teal text-xs tracking-[0.3em] uppercase mb-4 reveal text-center">Legacy</p>
-    <h2 class="font-serif font-black text-4xl md:text-5xl text-paper text-center mb-16 reveal reveal-delay-1">
-      그가 남긴 것
-    </h2>
-    <div class="grid md:grid-cols-3 gap-px border border-dim" style="background: #2a2d3a;">
-      <div class="bg-deep p-8 reveal">
-        <div class="text-3xl mb-4">🏯</div>
-        <h3 class="font-serif text-paper text-lg font-semibold mb-3">난중일기</h3>
-        <p class="text-mist text-sm leading-7" style="font-weight: 300;">7년간의 전쟁을 기록한 진중 일기. 한 인간의 고뇌와 리더십이 담긴 역사적 문학으로 유네스코 세계기록유산에 등재되었다.</p>
-      </div>
-      <div class="bg-deep p-8 reveal reveal-delay-1">
-        <div class="text-3xl mb-4">💴</div>
-        <h3 class="font-serif text-paper text-lg font-semibold mb-3">100원 동전</h3>
-        <p class="text-mist text-sm leading-7" style="font-weight: 300;">대한민국 100원 주화에 이순신 장군의 초상이 새겨져 있다. 광화문 광장의 동상과 함께 국민들이 매일 마주치는 가장 친근한 역사적 상징이다.</p>
-      </div>
-      <div class="bg-deep p-8 reveal reveal-delay-2">
-        <div class="text-3xl mb-4">🌊</div>
-        <h3 class="font-serif text-paper text-lg font-semibold mb-3">세계의 경탄</h3>
-        <p class="text-mist text-sm leading-7" style="font-weight: 300;">영국 해군 제독 조지 알렉산더 발라드는 "이순신은 넬슨 제독보다 더 위대한 제독"이라 평했다. 일본의 역사가들 역시 그의 전략을 극찬해 마지않는다.</p>
-      </div>
-    </div>
-  </div>
-</section>
+  <!-- 푸터 정보 -->
+  <footer class="border-t border-slate-800 bg-slate-950/40 py-3 text-center text-[11px] text-slate-500">
+    <p>© 2026 한컴타자연습 - 산성비 에디션. Google Sheets API 연동 지원.</p>
+  </footer>
 
-<!-- QUOTE -->
-<section id="quote" class="py-32 px-6" style="background: radial-gradient(ellipse 70% 50% at 50% 50%, #1a2535, #0C0E14);">
-  <div class="max-w-3xl mx-auto text-center reveal">
-    <div class="quote-mark mb-2" aria-hidden="true">"</div>
-    <blockquote class="font-serif text-2xl md:text-3xl text-paper leading-relaxed font-semibold mb-8" style="letter-spacing: -0.01em;">
-      죽고자 하면 살고,<br>살고자 하면 죽는다.
-    </blockquote>
-    <p class="text-mist text-sm tracking-widest" style="font-weight: 300;">— 명량 해전 전날 밤, 부하들에게</p>
-  </div>
+  <script>
+    // --- 1. 전역 게임 설정 및 상태 (Google Apps Script 웹앱 URL 고정 적용) ---
+    const API_URL = "https://script.google.com/macros/s/AKfycbxFDKxDHtZcxx7EkV71B9eax76DvyA1Y8XmNaLQuVgokmXkZAlRnb1ekpM327EP6lhh/exec";
+    
+    // 한국어 단어 데이터베이스
+    const KOREAN_WORDS = [
+      "하늘", "바람", "구름", "한글", "컴퓨터", "인터넷", "스마트폰", "대한민국", "호랑이", "세종대왕",
+      "독도", "김치", "무궁화", "가을", "겨울", "행복", "사랑", "우정", "희망", "미래",
+      "인공지능", "코딩", "프로그래밍", "스프레드시트", "애플리케이션", "데이터베이스", "서버", "네트워크", "알고리즘", "객체지향",
+      "자바스크립트", "파이썬", "웹퍼블리싱", "디자인", "포트폴리오", "창의성", "인내심", "열정", "도전", "성공",
+      "봄바람", "단풍잎", "눈사람", "밤하늘", "은하수", "우주선", "인공위성", "메모장", "계산기", "브라우저",
+      "이메일", "클라우드", "키보드", "마우스", "모니터", "프린터", "와이파이", "블루투스", "보안", "해킹",
+      "가정", "학교", "직장", "여행", "독서", "음악", "영화", "스포츠", "축구", "야구",
+      "농구", "배구", "수영", "등산", "자전거", "마라톤", "체육관", "운동장", "건강", "영양소"
+    ];
 
-  <div class="max-w-3xl mx-auto mt-20 grid md:grid-cols-2 gap-8">
-    <div class="border-l-2 border-teal pl-6 reveal">
-      <p class="font-serif text-paper text-lg leading-relaxed mb-3">"한 번 죽는 것은 모두가 다 하는 일이다. 다만 죽는 곳이 다를 뿐이다."</p>
-      <p class="text-mist text-xs tracking-widest">— 난중일기</p>
-    </div>
-    <div class="border-l-2 border-gold pl-6 reveal reveal-delay-1">
-      <p class="font-serif text-paper text-lg leading-relaxed mb-3">"나라를 위한 큰 충성심은 부모에게 효도하는 것으로부터 비롯된다."</p>
-      <p class="text-mist text-xs tracking-widest">— 이순신 어록</p>
-    </div>
-  </div>
-</section>
+    let gameState = {
+      isPlaying: false,
+      isPaused: false,
+      score: 0,
+      level: 1,
+      lives: 5,
+      words: [],            // 현재 화면에 떠 있는 단어 객체 배열
+      lastSpawnTime: 0,     // 마지막으로 단어 무리가 생성된 시각
+      spawnInterval: 3500,  // 단어 무리 생성 주기 (단어 수가 늘어났으므로 3.5초 여유 제공)
+      wordSpeed: 0.8,       // 낙하 속도 (단어가 많으므로 초기 속도를 기존 1.2 -> 0.8로 편안하게 조정)
+      correctCount: 0,      // 맞춘 단어 수 (타수 계산 및 레벨업용)
+      totalKeystrokes: 0,   // 총 누적 키 입력 횟수
+      startTime: null,      // 게임 시작 시간
+      scoreMultiplier: 1    // 점수 배율
+    };
 
-<!-- FOOTER -->
-<footer class="bg-ink border-t border-dim py-12 px-6">
-  <div class="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-    <div>
-      <p class="font-serif text-gold font-semibold text-sm mb-1">충무공 이순신 李舜臣</p>
-      <p class="text-dim text-xs">1545 — 1598 · 불패의 제독</p>
-    </div>
-    <p class="text-dim text-xs text-center">참고: 위키백과, 한국민족문화대백과사전, 난중일기</p>
-  </div>
-</footer>
+    // Web Audio API 사운드 신시사이저
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    
+    function playBeep(type) {
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      
+      if (type === 'correct') {
+        osc.frequency.setValueAtTime(880, audioCtx.currentTime); // A5
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.1);
+      } else if (type === 'wrong') {
+        osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.25);
+      } else if (type === 'levelUp') {
+        const now = audioCtx.currentTime;
+        const freqs = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+        freqs.forEach((freq, idx) => {
+          const noteOsc = audioCtx.createOscillator();
+          const noteGain = audioCtx.createGain();
+          noteOsc.connect(noteGain);
+          noteGain.connect(audioCtx.destination);
+          
+          noteOsc.frequency.setValueAtTime(freq, now + idx * 0.1);
+          noteGain.gain.setValueAtTime(0.1, now + idx * 0.1);
+          noteGain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.1 + 0.2);
+          
+          noteOsc.start(now + idx * 0.1);
+          noteOsc.stop(now + idx * 0.1 + 0.25);
+        });
+      } else if (type === 'gameOver') {
+        osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.8);
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.8);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.85);
+      }
+    }
 
-<script>
-// Reveal on scroll
-const revealEls = document.querySelectorAll('.reveal');
-const observer = new IntersectionObserver((entries) => {
-  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); } });
-}, { threshold: 0.12 });
-revealEls.forEach(el => observer.observe(el));
-
-// Count-up animation
-function animateCount(el) {
-  const target = parseInt(el.getAttribute('data-count'));
-  const duration = 1600;
-  const start = performance.now();
-  function update(now) {
-    const t = Math.min((now - start) / duration, 1);
-    const ease = 1 - Math.pow(1 - t, 3);
-    el.textContent = Math.floor(ease * target);
-    if (t < 1) requestAnimationFrame(update);
-    else el.textContent = target;
-  }
-  requestAnimationFrame(update);
-}
-const statObserver = new IntersectionObserver((entries) => {
-  entries.forEach(e => { if (e.isIntersecting) { animateCount(e.target); statObserver.unobserve(e.target); } });
-}, { threshold: 0.5 });
-document.querySelectorAll('[data-count]').forEach(el => statObserver.observe(el));
-
-// Ambient star particles
-(function() {
-  const container = document.getElementById('particles');
-  for (let i = 0; i < 60; i++) {
-    const dot = document.createElement('div');
-    const size = Math.random() * 2 + 1;
-    Object.assign(dot.style, {
-      position: 'absolute',
-      width: size + 'px',
-      height: size + 'px',
-      borderRadius: '50%',
-      background: Math.random() > 0.7 ? '#C9A84C' : '#4EADA0',
-      opacity: Math.random() * 0.4 + 0.1,
-      top: Math.random() * 100 + '%',
-      left: Math.random() * 100 + '%',
-      animation: `pulse ${Math.random() * 4 + 3}s ease-in-out infinite`,
-      animationDelay: Math.random() * 5 + 's',
+    // --- 2. 초기 기동 및 상태 로드 ---
+    window.addEventListener('DOMContentLoaded', () => {
+      fetchLeaderboard();
     });
-    container.appendChild(dot);
-  }
-  const style = document.createElement('style');
-  style.textContent = `@keyframes pulse { 0%,100%{opacity:0.1} 50%{opacity:0.5} }`;
-  document.head.appendChild(style);
-})();
 
-// Mobile menu
-function toggleMenu() {
-  const m = document.getElementById('mobile-menu');
-  m.classList.toggle('hidden');
-  m.classList.toggle('flex');
-}
+    // 알림 피드백 토스트 띄우기
+    function showNotice(text, color = "indigo") {
+      const notice = document.getElementById('gameNotice');
+      notice.textContent = text;
+      
+      notice.className = `absolute top-4 left-4 px-3 py-1.5 rounded-lg text-xs font-semibold border pointer-events-none transition-opacity duration-300 opacity-100`;
+      if (color === "emerald") {
+        notice.classList.add("bg-emerald-950/90", "text-emerald-300", "border-emerald-800/60");
+      } else if (color === "rose") {
+        notice.classList.add("bg-rose-950/90", "text-rose-300", "border-rose-800/60");
+      } else {
+        notice.classList.add("bg-indigo-950/90", "text-indigo-300", "border-indigo-800/60");
+      }
 
-// Hero immediately visible
-document.querySelectorAll('#hero .reveal').forEach(el => {
-  setTimeout(() => el.classList.add('visible'), 100);
-});
-</script>
+      setTimeout(() => {
+        notice.classList.replace("opacity-100", "opacity-0");
+      }, 2500);
+    }
+
+    // --- 3. 게임 핵심 엔진 및 컨트롤 로직 ---
+    function startGame() {
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+
+      gameState.isPlaying = true;
+      gameState.isPaused = false;
+      gameState.score = 0;
+      gameState.level = 1;
+      gameState.lives = 5;
+      gameState.words = [];
+      gameState.lastSpawnTime = Date.now() - 2000; // 시작하자마자 단어가 즉각 내려오도록 보정
+      gameState.spawnInterval = 3500;
+      gameState.wordSpeed = 0.8;
+      gameState.correctCount = 0;
+      gameState.totalKeystrokes = 0;
+      gameState.startTime = Date.now();
+      gameState.scoreMultiplier = 1;
+
+      document.getElementById('startScreen').classList.add('hidden');
+      document.getElementById('pauseScreen').classList.add('hidden');
+      document.getElementById('scoreDisplay').textContent = '0';
+      document.getElementById('levelDisplay').textContent = '1';
+      document.getElementById('wpmDisplay').textContent = '0';
+      updateLivesUI();
+
+      const input = document.getElementById('typingInput');
+      input.disabled = false;
+      input.placeholder = "내려오는 단어를 입력하고 Enter를 누르세요!";
+      input.focus();
+      input.value = "";
+      input.classList.add('pulse-glow');
+
+      document.getElementById('pauseBtn').disabled = false;
+
+      const wordElements = document.querySelectorAll('.game-word-node');
+      wordElements.forEach(el => el.remove());
+
+      requestAnimationFrame(gameLoop);
+      showNotice("산성비 대량 스폰 모드 시작! 화면 전체를 넓게 보세요!", "indigo");
+    }
+
+    function togglePause() {
+      if (!gameState.isPlaying) return;
+      
+      gameState.isPaused = !gameState.isPaused;
+      const pauseScreen = document.getElementById('pauseScreen');
+      const input = document.getElementById('typingInput');
+
+      if (gameState.isPaused) {
+        pauseScreen.classList.remove('hidden');
+        input.disabled = true;
+        input.classList.remove('pulse-glow');
+      } else {
+        pauseScreen.classList.add('hidden');
+        input.disabled = false;
+        input.focus();
+        input.classList.add('pulse-glow');
+        gameState.lastSpawnTime = Date.now();
+        requestAnimationFrame(gameLoop);
+      }
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        togglePause();
+      }
+    });
+
+    const typingInput = document.getElementById('typingInput');
+    typingInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        const value = typingInput.value.trim();
+        if (value === '') return;
+
+        processWordSubmission(value);
+        typingInput.value = '';
+      } else if (e.key !== 'Process' && e.key !== 'Shift') {
+        gameState.totalKeystrokes++;
+      }
+    });
+
+    function processWordSubmission(typedText) {
+      let matchedIdx = -1;
+      
+      // 화면에 떠있는 단어 중 일치하는 단어 찾기 (동일 단어가 있으면 더 아래쪽에 내려온 것 먼저 깨트리기)
+      for (let i = 0; i < gameState.words.length; i++) {
+        if (gameState.words[i].text === typedText) {
+          if (matchedIdx === -1 || gameState.words[i].y > gameState.words[matchedIdx].y) {
+            matchedIdx = i;
+          }
+        }
+      }
+
+      if (matchedIdx !== -1) {
+        const word = gameState.words[matchedIdx];
+        createExplosion(word.x + 40, word.y + 15, word.text); // 폭발 중심점 맞춤 보정
+
+        const el = document.getElementById(word.id);
+        if (el) el.remove();
+
+        gameState.words.splice(matchedIdx, 1);
+        gameState.correctCount++;
+        
+        const wordPoints = Math.round(word.text.length * 15 * gameState.scoreMultiplier * gameState.level);
+        gameState.score += wordPoints;
+        
+        document.getElementById('scoreDisplay').textContent = gameState.score;
+        playBeep('correct');
+
+        // 단어를 8개 맞출 때마다 레벨 업!
+        if (gameState.correctCount % 8 === 0) {
+          levelUp();
+        }
+
+      } else {
+        playBeep('wrong');
+      }
+
+      updateWpm();
+    }
+
+    function levelUp() {
+      gameState.level++;
+      // 속도는 급격하게 빨라지지 않고 단계별로 아주 정교하게 미세 증가
+      gameState.wordSpeed += 0.12; 
+      gameState.spawnInterval = Math.max(1800, gameState.spawnInterval - 150); // 무리가 떨어지는 재생성 주기도 조금씩 가속화
+      document.getElementById('levelDisplay').textContent = gameState.level;
+      
+      playBeep('levelUp');
+      showNotice(`Level Up! 단계가 ${gameState.level}(으)로 상승했습니다!`, "emerald");
+    }
+
+    function updateWpm() {
+      if (!gameState.startTime) return;
+      const elapsedMinutes = (Date.now() - gameState.startTime) / 60000;
+      if (elapsedMinutes <= 0) return;
+
+      const estimatedWpm = Math.round((gameState.totalKeystrokes) / elapsedMinutes * 0.7);
+      const clampedWpm = Math.min(1500, Math.max(0, estimatedWpm));
+      document.getElementById('wpmDisplay').textContent = clampedWpm;
+    }
+
+    function updateLivesUI() {
+      const container = document.getElementById('lifeDisplay');
+      container.innerHTML = '❤️'.repeat(gameState.lives) + '🖤'.repeat(5 - gameState.lives);
+    }
+
+    // --- 4. 폭발 파티클 시각 효과 ---
+    function createExplosion(x, y, text) {
+      const gameArea = document.getElementById('gameArea');
+      const colors = ['#34d399', '#60a5fa', '#a78bfa', '#f472b6', '#fbbf24'];
+      
+      for (let i = 0; i < 12; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        
+        const size = Math.random() * 8 + 4;
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        
+        const angle = Math.random() * Math.PI * 2;
+        const distance = Math.random() * 80 + 30;
+        const tx = Math.cos(angle) * distance + 'px';
+        const ty = Math.sin(angle) * distance + 'px';
+        
+        particle.style.width = size + 'px';
+        particle.style.height = size + 'px';
+        particle.style.backgroundColor = color;
+        particle.style.left = x + 'px';
+        particle.style.top = y + 'px';
+        particle.style.setProperty('--tx', tx);
+        particle.style.setProperty('--ty', ty);
+        
+        gameArea.appendChild(particle);
+        setTimeout(() => particle.remove(), 600);
+      }
+    }
+
+    // --- 5. 게임 메인 프레임 루프 ---
+    function gameLoop(timestamp) {
+      if (!gameState.isPlaying || gameState.isPaused) return;
+
+      const now = Date.now();
+      const gameArea = document.getElementById('gameArea');
+      const areaHeight = gameArea.clientHeight;
+      const areaWidth = gameArea.clientWidth;
+
+      // 정기 스폰 타이머 도달 시 묶음(Batch) 형태로 복수 단어 스폰
+      if (now - gameState.lastSpawnTime > gameState.spawnInterval) {
+        spawnWordBatch(areaWidth);
+        gameState.lastSpawnTime = now;
+      }
+
+      // 화면상의 모든 단어 하강 처리
+      for (let i = gameState.words.length - 1; i >= 0; i--) {
+        const word = gameState.words[i];
+        word.y += gameState.wordSpeed;
+        
+        const el = document.getElementById(word.id);
+        if (el) {
+          el.style.top = word.y + 'px';
+        }
+
+        // 바닥선 이탈 침범 감지 판정
+        if (word.y >= areaHeight - 40) {
+          gameState.lives--;
+          updateLivesUI();
+          playBeep('wrong');
+
+          if (el) el.remove();
+          gameState.words.splice(i, 1);
+
+          if (gameState.lives <= 0) {
+            endGame();
+            return;
+          }
+        }
+      }
+
+      updateWpm();
+      requestAnimationFrame(gameLoop);
+    }
+
+    // 단어를 2~3개 묶음으로 겹치지 않게 생성하는 특화형 배치 함수
+    function spawnWordBatch(areaWidth) {
+      const gameArea = document.getElementById('gameArea');
+      
+      // 난이도별 동시 스폰 개수 동적 연산
+      let minWords = 2;
+      let maxWords = 3;
+      if (gameState.level === 1) {
+        minWords = 1;
+        maxWords = 2; // 처음엔 부하 방지를 위해 1~2개
+      } else if (gameState.level >= 5) {
+        minWords = 2;
+        maxWords = 4; // 고인물 타임 2~4개 다중 하강
+      }
+
+      const spawnCount = Math.floor(Math.random() * (maxWords - minWords + 1)) + minWords;
+      const allocatedXs = []; // 이미 배치 완료된 가로축 모음
+
+      for (let i = 0; i < spawnCount; i++) {
+        const randomText = KOREAN_WORDS[Math.floor(Math.random() * KOREAN_WORDS.length)];
+        const wordId = 'word_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
+        
+        // 가로 영역 겹침 방지 보정 로직
+        let targetX = 0;
+        let attempts = 0;
+        const minX = 40;
+        const maxX = areaWidth - 140; // 스크린 너비 안전 마진 확보
+        const minSpacing = 110; // 단어 가로 간최소 간격 안전 확보 거리
+
+        do {
+          targetX = Math.floor(Math.random() * (maxX - minX)) + minX;
+          attempts++;
+        } while (
+          allocatedXs.some(existingX => Math.abs(existingX - targetX) < minSpacing) && 
+          attempts < 15 // 무한 루프 수렁 방지용 안전 장치
+        );
+
+        allocatedXs.push(targetX);
+
+        // 완전 수평 정렬을 피해 0~50px 내에서 시작 y좌표에 약간의 시차(stagger) 부여
+        const staggerY = -Math.floor(Math.random() * 50);
+
+        const wordObj = {
+          id: wordId,
+          text: randomText,
+          x: targetX,
+          y: staggerY
+        };
+
+        gameState.words.push(wordObj);
+
+        // UI 돔 엘리먼트 생성
+        const el = document.createElement('div');
+        el.id = wordId;
+        el.className = 'game-word-node absolute px-3 py-1.5 rounded-lg text-sm md:text-base font-bold bg-slate-900/95 border border-slate-700/70 shadow-md text-slate-100 pointer-events-none transition-transform z-10 whitespace-nowrap';
+        el.style.left = targetX + 'px';
+        el.style.top = staggerY + 'px';
+        el.textContent = randomText;
+
+        // 보너스 긴 단어용 테두리 하이라이팅 적용
+        if (randomText.length >= 5) {
+          el.classList.add('border-purple-500/80', 'text-purple-300');
+        }
+
+        gameArea.appendChild(el);
+      }
+    }
+
+    // --- 6. 게임 종료 및 리더보드 연동 ---
+    function endGame() {
+      gameState.isPlaying = false;
+      playBeep('gameOver');
+
+      const input = document.getElementById('typingInput');
+      input.disabled = true;
+      input.classList.remove('pulse-glow');
+      input.value = "";
+      input.placeholder = "게임이 종료되었습니다.";
+
+      document.getElementById('pauseBtn').disabled = true;
+      document.getElementById('finalScore').textContent = gameState.score + '점';
+      
+      const elapsedMinutes = (Date.now() - gameState.startTime) / 60000;
+      const finalWpm = Math.round((gameState.totalKeystrokes / 5) / (elapsedMinutes || 1) * 3);
+      document.getElementById('finalWpm').textContent = (finalWpm || 0) + ' WPM';
+
+      document.getElementById('gameOverModal').classList.remove('hidden');
+    }
+
+    function closeGameOverModal() {
+      document.getElementById('gameOverModal').classList.add('hidden');
+      document.getElementById('startScreen').classList.remove('hidden');
+    }
+
+    // 구글 스프레드시트 랭킹 데이터 전송 (POST)
+    async function submitScore() {
+      const nameInput = document.getElementById('playerNameInput');
+      const name = nameInput.value.trim() || "익명 타자";
+      const score = gameState.score;
+      const wpmText = document.getElementById('finalWpm').textContent;
+      const wpm = parseInt(wpmText) || 0;
+
+      const errorDiv = document.getElementById('submitError');
+      const btn = document.getElementById('submitScoreBtn');
+      const spinner = document.getElementById('submitSpinner');
+
+      errorDiv.classList.add('hidden');
+      btn.disabled = true;
+      spinner.classList.remove('hidden');
+
+      try {
+        const payload = {
+          name: name,
+          score: score,
+          wpm: wpm
+        };
+
+        await fetch(API_URL, {
+          method: 'POST',
+          mode: 'no-cors', 
+          headers: {
+            'Content-Type': 'text/plain;charset=utf-8'
+          },
+          body: JSON.stringify(payload)
+        });
+
+        showNotice("성공적으로 점수가 전송되었습니다!", "emerald");
+        nameInput.value = "";
+        
+        setTimeout(() => {
+          fetchLeaderboard();
+          closeGameOverModal();
+        }, 1200);
+
+      } catch (err) {
+        console.error("점수 전송 실패:", err);
+        errorDiv.textContent = "전송 실패: " + err.message;
+        errorDiv.classList.remove('hidden');
+      } finally {
+        btn.disabled = false;
+        spinner.classList.add('hidden');
+      }
+    }
+
+    // 구글 스프레드시트 랭킹 목록 호출 (GET)
+    async function fetchLeaderboard() {
+      const container = document.getElementById('leaderboardContainer');
+      const refreshIcon = document.getElementById('refreshIcon');
+
+      refreshIcon.classList.add('animate-spin');
+
+      try {
+        const response = await fetch(API_URL);
+        const result = await response.json();
+
+        if (result.status === "success") {
+          const list = result.data;
+          
+          if (list.length === 0) {
+            container.innerHTML = `
+              <div class="text-center py-12 text-slate-500 text-xs">
+                아직 등록된 기록이 없습니다.<br>첫 번째 랭커가 되어보세요!
+              </div>
+            `;
+          } else {
+            container.innerHTML = list.map((item, idx) => {
+              let medal = "🥈";
+              let badgeColor = "bg-slate-800 text-slate-300";
+              
+              if (idx === 0) {
+                medal = "🥇";
+                badgeColor = "bg-amber-500/10 text-amber-400 border border-amber-500/30";
+              } else if (idx === 1) {
+                medal = "🥈";
+                badgeColor = "bg-slate-300/10 text-slate-300 border border-slate-300/20";
+              } else if (idx === 2) {
+                medal = "🥉";
+                badgeColor = "bg-amber-700/20 text-amber-600 border border-amber-700/20";
+              } else {
+                medal = `<span class="text-slate-500 font-semibold text-xs">${idx + 1}</span>`;
+                badgeColor = "bg-slate-900 border border-slate-800 text-slate-400";
+              }
+
+              return `
+                <div class="flex items-center justify-between p-3 rounded-xl transition-all hover:bg-slate-900/60 ${idx < 3 ? 'bg-slate-900/40' : 'bg-slate-950/20'}">
+                  <div class="flex items-center gap-3">
+                    <div class="w-7 h-7 flex items-center justify-center rounded-lg ${badgeColor}">
+                      ${medal}
+                    </div>
+                    <div>
+                      <h4 class="font-bold text-sm text-slate-200">${escapeHtml(item.name)}</h4>
+                      <p class="text-[10px] text-slate-500">${item.date || "기록 없음"}</p>
+                    </div>
+                  </div>
+                  <div class="text-right">
+                    <span class="text-sm font-black text-emerald-400 block">${item.score.toLocaleString()}점</span>
+                    <span class="text-[10px] text-purple-400 font-medium">${item.wpm} WPM</span>
+                  </div>
+                </div>
+              `;
+            }).join('');
+          }
+        } else {
+          throw new Error(result.message);
+        }
+
+      } catch (err) {
+        console.error("랭킹 가져오기 실패:", err);
+        container.innerHTML = `
+          <div class="text-center py-10 text-slate-500 text-xs">
+            <span class="text-rose-400 block mb-1">연동 에러 발생</span>
+            <p class="text-[10px] text-slate-600 px-2 leading-relaxed">
+              구글 시트 연동 주소를 확인하시거나,<br>배포 권한 설정을 다시 한번 검토해 주세요.
+            </p>
+          </div>
+        `;
+      } finally {
+        refreshIcon.classList.remove('animate-spin');
+      }
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+    }
+  </script>
 </body>
 </html>
